@@ -1,4 +1,4 @@
-from pytils.test import create_suite
+from pytils.invigilator import create_suite
 from pytils.tests import table
 
 
