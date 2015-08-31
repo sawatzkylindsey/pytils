@@ -11,6 +11,7 @@ class Tests(TestCase):
         self.assertEqual(table.rows(), [])
         self.assertEqual(table.width(), 0)
         self.assertEqual(table.height(), 0)
+        self.assertEqual(table.draw(), "")
 
         table = Table(["col1", "col2", "col3"], [["1", "2", 3], [4, "5", "6"]])
         self.assertEqual(table.header(), ["col1", "col2", "col3"])
@@ -20,6 +21,13 @@ class Tests(TestCase):
         ])
         self.assertEqual(table.width(), 3)
         self.assertEqual(table.height(), 2)
+        self.assertEqual(table.draw(),
+            "col1|col2|col3\n1|2|3\n4|5|6")
+
+        table = Table(["col1", "col2", "col3"],
+            [["1", "2asdf", 3], [4, "5", "6"]])
+        self.assertEqual(table.draw(),
+            "col1|col2|col3\n1|2asd|3\n4|5|6")
 
     def test_table_refine(self):
         table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6")
@@ -29,6 +37,12 @@ class Tests(TestCase):
         self.assertEqual(refined, expected)
 
         refined = table.refine("col1", "1")
+        self.assertEqual(refined, expected)
+
+        refined = table.refine(refinements={"col1": lambda v: v == "1"})
+        self.assertEqual(refined, expected)
+
+        refined = table.refine(refinements={"col1": "1"})
         self.assertEqual(refined, expected)
 
     def test_table_column(self):
@@ -48,6 +62,16 @@ class Tests(TestCase):
 
         converted = table.convert(conversions={"col1": lambda v: int(v)})
         self.assertEqual(converted.rows(), [
+            [1, "2", "3"],
+            [4, "5", "6"]
+        ])
+
+    def test_table_load_csv(self):
+        table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6",
+            {"col1": lambda v: int(v)})
+
+        self.assertEqual(table.header(), ["col1", "col2", "col3"])
+        self.assertEqual(table.rows(), [
             [1, "2", "3"],
             [4, "5", "6"]
         ])

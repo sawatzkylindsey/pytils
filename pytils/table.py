@@ -1,4 +1,5 @@
-import csv
+from csv import reader as csv_reader
+
 
 class Table(object):
     def __init__(self, header=[], rows=[]):
@@ -15,19 +16,56 @@ class Table(object):
             for i in range(0, self.width()):
                 self._columns[i] += [row[i]]
 
-    def refine(self, name, func_match):
-        col = self._find(name)
+    def refine(self, name=None, func_match=None, refinements=None):
+        if refinements is not None:
+            if name is not None or func_match is not None:
+                raise ValueError("May only define (name, func_match) or " \
+                    "refinements, but not both.")
+
+            if not isinstance(refinements, dict):
+                raise TypeError("refinements must be a dict.")
+        elif name is None or func_match is None:
+            raise ValueError("Must define either (name, func_match) or " \
+                "refinements.")
+
+        refinement = [lambda v: True for i in range(0, self.width())]
+
+        if refinements is None:
+            col = self._find(name)
+            refinement[col] = func_match
+        else:
+            for name, func_match in refinements.items():
+                col = self._find(name)
+                refinement[col] = func_match
+
         rows = []
 
         for data in self.rows():
-            if callable(func_match) and func_match(data[col]):
-                rows += [data]
-            elif data[col] == func_match:
+            all_match = True
+
+            for i in range(0, self.width()):
+                if callable(refinement[i]):
+                    all_match &= refinement[i](data[i])
+                else:
+                    all_match &= refinement[i] == data[i]
+
+            if all_match:
                 rows += [data]
 
         return Table(self.header(), rows)
 
     def convert(self, name=None, func=None, conversions=None):
+        if conversions is not None:
+            if name is not None or func is not None:
+                raise ValueError("May only define (name, func) or " \
+                    "conversions, but not both.")
+
+            if not isinstance(conversions, dict):
+                raise TypeError("conversions must be a dict.")
+        elif name is None or func is None:
+            raise ValueError("Must define either (name, func) or " \
+                "conversions.")
+
         conversion = [lambda v: v for i in range(0, self.width())]
 
         if conversions is None:
@@ -66,6 +104,16 @@ class Table(object):
     def rows(self):
         return self._rows
 
+    def draw(self):
+        lengths = [len(name) for name in self.header()]
+        format_str = "|".join(["{:.%ds}" % l for l in lengths])
+        lines = [format_str.format(*self.header())]
+
+        for row in self.rows():
+            lines += [format_str.format(*[str(r) for r in row])]
+
+        return "\n".join(lines)
+
     def _find(self, name):
         i = self._header.index(name)
 
@@ -78,7 +126,7 @@ class Table(object):
         return self.header() == other.header() and self.rows() == other.rows()
 
     def __str__(self):
-        return "Table: %s - %s" % (self.header(), self.rows())
+        return "Table: (width=%d, height=%d)" % (self.width(), self.height())
 
     def __unicode__(self):
         return str(self)
@@ -87,8 +135,12 @@ class Table(object):
         return str(self)
 
     @staticmethod
-    def load_csv(text):
-        reader = csv.reader(text.split("\n"))
+    def load_csv(csv, conversions=None):
+        if isinstance(csv, str):
+            reader = csv_reader(csv.split("\n"))
+        else:
+            reader = csv_reader(csv)
+
         header = None
         rows = []
 
@@ -98,5 +150,10 @@ class Table(object):
             else:
                 rows += [data]
 
-        return Table(header, rows)
+        base = Table(header, rows)
+
+        if conversions is not None:
+            return base.convert(conversions=conversions)
+        else:
+            return base
 
