@@ -100,11 +100,21 @@ class Table(object):
         col = self._find(name)
         return self._columns[col][:limit]
 
-    def columns(self, names, limit=None):
-        if len(names) == 0:
-            raise ValueError("Must specify at least one name.")
+    def column_rows(self, names, limit=None):
+        columns = [self.column(name, limit) for name in names]
+        as_rows = []
+        i = 0
 
-        return [self.column(name, limit) for name in names]
+        while i < len(columns[0]):
+            as_row = []
+
+            for column in columns:
+                as_row += [column[i]]
+
+            as_rows += [as_row]
+            i += 1
+
+        return as_rows
 
     def width(self):
         return len(self.header())
