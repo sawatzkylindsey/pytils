@@ -105,6 +105,19 @@ class Tests(TestCase):
         self.assertEqual(table.column("col2"), ["2", "5"])
         self.assertEqual(table.column("col3"), ["3", "6"])
 
+        self.assertEqual(table.column("col1", 0), [])
+        self.assertEqual(table.column("col1", 1), ["1"])
+        self.assertEqual(table.column("col1", 2), ["1", "4"])
+        self.assertEqual(table.column("col1", 3), ["1", "4"])
+
+    def test_table_columns(self):
+        table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6")
+        self.assertEqual(table.columns(["col1", "col2"]), [["1", "4"], ["2", "5"]])
+        self.assertEqual(table.columns(["col3", "col2"]), [["3", "6"], ["2", "5"]])
+        self.assertEqual(table.columns(["col3"]), [["3", "6"]])
+
+        self.assertEqual(table.columns(["col1", "col2"], 1), [["1"], ["2"]])
+
     def test_table_load_csv(self):
         table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6",
             {"col1": lambda v: int(v)})

@@ -61,7 +61,7 @@ class Table(object):
                     "conversions, but not both.")
 
             if not isinstance(conversions, dict):
-                raise TypeError("conversions must be a dict.")
+                raise TypeError("Conversions must be a dict.")
         elif name is None or func is None:
             raise ValueError("Must define either (name, func) or " \
                 "conversions.")
@@ -93,9 +93,18 @@ class Table(object):
         rows = sorted(self.rows(), key=lambda row: row[col], reverse=reverse)
         return Table(self.header(), rows)
 
-    def column(self, name):
+    def column(self, name, limit=None):
+        if limit is not None and limit < 0:
+            raise ValueError("Limit must be 0 or positive.")
+
         col = self._find(name)
-        return self._columns[col]
+        return self._columns[col][:limit]
+
+    def columns(self, names, limit=None):
+        if len(names) == 0:
+            raise ValueError("Must specify at least one name.")
+
+        return [self.column(name, limit) for name in names]
 
     def width(self):
         return len(self.header())
