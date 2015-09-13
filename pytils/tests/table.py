@@ -45,12 +45,6 @@ class Tests(TestCase):
         refined = table.refine(refinements={"col1": "1"})
         self.assertEqual(refined, expected)
 
-    def test_table_column(self):
-        table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6")
-        self.assertEqual(table.column("col1"), ["1", "4"])
-        self.assertEqual(table.column("col2"), ["2", "5"])
-        self.assertEqual(table.column("col3"), ["3", "6"])
-
     def test_table_convert(self):
         table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6")
 
@@ -65,6 +59,51 @@ class Tests(TestCase):
             [1, "2", "3"],
             [4, "5", "6"]
         ])
+
+    def test_table_sort(self):
+        table = Table.load_csv("col1,col2,col3\n1,2,3\n4,1,6")
+
+        sortd = table.sort("col1")
+        self.assertEqual(sortd.rows(), [
+            ["1", "2", "3"],
+            ["4", "1", "6"]
+        ])
+        sortd = table.sort("col1", reverse=True)
+        self.assertEqual(sortd.rows(), [
+            ["4", "1", "6"],
+            ["1", "2", "3"]
+        ])
+
+        sortd = table.sort("col2")
+        self.assertEqual(sortd.rows(), [
+            ["4", "1", "6"],
+            ["1", "2", "3"]
+        ])
+        sortd = table.sort("col2", reverse=True)
+        self.assertEqual(sortd.rows(), [
+            ["1", "2", "3"],
+            ["4", "1", "6"]
+        ])
+
+        table = Table(["col"], [["2"], ["1"], [None]])
+        sortd = table.sort("col")
+        self.assertEqual(sortd.rows(), [
+            [None],
+            ["1"],
+            ["2"]
+        ])
+        sortd = table.sort("col", reverse=True)
+        self.assertEqual(sortd.rows(), [
+            ["2"],
+            ["1"],
+            [None]
+        ])
+
+    def test_table_column(self):
+        table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6")
+        self.assertEqual(table.column("col1"), ["1", "4"])
+        self.assertEqual(table.column("col2"), ["2", "5"])
+        self.assertEqual(table.column("col3"), ["3", "6"])
 
     def test_table_load_csv(self):
         table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6",

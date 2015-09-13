@@ -88,6 +88,11 @@ class Table(object):
 
         return Table(self.header(), rows)
 
+    def sort(self, name, reverse=False):
+        col = self._find(name)
+        rows = sorted(self.rows(), key=lambda row: row[col], reverse=reverse)
+        return Table(self.header(), rows)
+
     def column(self, name):
         col = self._find(name)
         return self._columns[col]
