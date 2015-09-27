@@ -118,6 +118,18 @@ class Tests(TestCase):
 
         self.assertEqual(table.column_rows(["col1", "col2"], 1), [["1", "2"]])
 
+    def test_table_join(self):
+        table_a = Table.load_csv("id,name\n1,alice\n2,bob\n3,eve")
+        table_b = Table.load_csv("fid,spirit\n1,virtuous\n1,delightful\n3,evil\n0,moot")
+        joined = table_a.join("id", table_b, "fid")
+
+        self.assertEqual(joined.header(), ["id", "name", "fid", "spirit"])
+        self.assertEqual(joined.sort("spirit").rows(), [
+            ["1", "alice", "1", "delightful"],
+            ["3", "eve", "3", "evil"],
+            ["1", "alice", "1", "virtuous"]
+        ])
+
     def test_table_load_csv(self):
         table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6",
             {"col1": lambda v: int(v)})

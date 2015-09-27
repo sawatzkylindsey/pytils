@@ -1,3 +1,4 @@
+from collections import Counter
 from csv import reader as csv_reader
 
 
@@ -87,6 +88,23 @@ class Table(object):
             rows += [row]
 
         return Table(self.header(), rows)
+
+    def join(self, name, other_table, other_name):
+        values = Counter(self.column(name)).keys()
+        other_values = Counter(other_table.column(other_name)).keys()
+
+        rows = []
+
+        for value in values:
+            if value in other_values:
+                value_table = self.refine(name, value)
+                other_value_table = other_table.refine(other_name, value)
+
+                for data in value_table.rows():
+                    for other_data in other_value_table.rows():
+                        rows += [data + other_data]
+
+        return Table(self.header() + other_table.header(), rows)
 
     def sort(self, name, reverse=False):
         col = self._find(name)
