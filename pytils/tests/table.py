@@ -15,6 +15,24 @@ class Tests(TestCase):
 
         table = Table(["col1", "col2", "col3"], [["1", "2", 3], [4, "5", "6"]])
         self.assertEqual(table.header(), ["col1", "col2", "col3"])
+        # Make sure it is immutable
+        h = table.header()
+        h += ["header"]
+        self.assertEqual(table.header(), ["col1", "col2", "col3"])
+        self.assertEqual(table.rows(), [
+            ["1", "2", 3],
+            [4, "5", "6"]
+        ])
+        # Make sure it is immutable
+        r = table.rows()
+        r += [["abc", "x", "y"]]
+        self.assertEqual(table.rows(), [
+            ["1", "2", 3],
+            [4, "5", "6"]
+        ])
+        # Make sure the inner row is immutable
+        r = table.rows()
+        r[0] += ["abc"]
         self.assertEqual(table.rows(), [
             ["1", "2", 3],
             [4, "5", "6"]
@@ -22,12 +40,22 @@ class Tests(TestCase):
         self.assertEqual(table.width(), 3)
         self.assertEqual(table.height(), 2)
         self.assertEqual(table.draw(),
-            "col1|col2|col3\n1|2|3\n4|5|6")
+            "col1|col2|col3\n1   |2   |3   \n4   |5   |6   ")
 
         table = Table(["col1", "col2", "col3"],
             [["1", "2asdf", 3], [4, "5", "6"]])
         self.assertEqual(table.draw(),
-            "col1|col2|col3\n1|2asd|3\n4|5|6")
+            "col1|col2|col3\n1   |2asd|3   \n4   |5   |6   ")
+        self.assertEqual(table.draw(["col1", "col2", "col3"]),
+            "col1|col2|col3\n1   |2asd|3   \n4   |5   |6   ")
+        self.assertEqual(table.draw(["col1", "col3"]),
+            "col1|col3\n1   |3   \n4   |6   ")
+        self.assertEqual(table.draw(["col3", "col1"]),
+            "col3|col1\n3   |1   \n6   |4   ")
+        self.assertEqual(table.draw(["col3"]),
+            "col3\n3   \n6   ")
+        self.assertEqual(table.draw([]),
+            "")
 
     def test_table_refine(self):
         table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6")
@@ -115,8 +143,19 @@ class Tests(TestCase):
         self.assertEqual(table.column_rows(["col1", "col2"]), [["1", "2"], ["4", "5"]])
         self.assertEqual(table.column_rows(["col3", "col2"]), [["3", "2"], ["6", "5"]])
         self.assertEqual(table.column_rows(["col3"]), [["3"], ["6"]])
+        self.assertEqual(table.column_rows([]), [])
 
         self.assertEqual(table.column_rows(["col1", "col2"], 1), [["1", "2"]])
+
+    def test_table_narrow(self):
+        table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6\n4,5,7")
+        self.assertEqual(table.narrow(["col1", "col2"]).rows(), [["1", "2"], ["4", "5"], ["4", "5"]])
+        self.assertEqual(table.narrow(["col1", "col2"], unique=True).rows(), [["1", "2"], ["4", "5"]])
+        self.assertEqual(table.narrow(["col3", "col2"]).rows(), [["3", "2"], ["6", "5"], ["7", "5"]])
+        self.assertEqual(table.narrow(["col3"]).rows(), [["3"], ["6"], ["7"]])
+        self.assertEqual(table.narrow([]).rows(), [])
+
+        self.assertEqual(table.narrow(["col1", "col2"]).rows(), [["1", "2"], ["4", "5"], ["4", "5"]])
 
     def test_table_join(self):
         table_a = Table.load_csv("id,name\n1,alice\n2,bob\n3,eve")
@@ -128,6 +167,19 @@ class Tests(TestCase):
             ["1", "alice", "1", "delightful"],
             ["3", "eve", "3", "evil"],
             ["1", "alice", "1", "virtuous"]
+        ])
+
+    def test_table_merge(self):
+        table_1 = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6",
+            {"col1": lambda v: int(v)})
+        table_2 = Table.load_csv("col1,col2,col3\n7,8,9\n10,11,12")
+        table = table_1.merge(table_2)
+
+        self.assertEqual(table.rows(), [
+            [1, "2", "3"],
+            [4, "5", "6"],
+            ["7", "8", "9"],
+            ["10", "11", "12"]
         ])
 
     def test_table_load_csv(self):

@@ -11,8 +11,8 @@ class Table(object):
 
         for row in self._rows:
             if self.width() != len(row):
-                raise ValueError("All rows must have exactly %d items."
-                    % self.width())
+                raise ValueError("All rows must have exactly %d items.  " \
+                    "Found one with %d items." % (self.width(), len(row)))
 
             for i in range(0, self.width()):
                 self._columns[i] += [row[i]]
@@ -89,6 +89,10 @@ class Table(object):
 
         return Table(self.header(), rows)
 
+    def narrow(self, names, unique=False):
+        data = self.column_rows(names, unique=unique)
+        return Table(names, data)
+
     def join(self, name, other_table, other_name):
         values = Counter(self.column(name)).keys()
         other_values = Counter(other_table.column(other_name)).keys()
@@ -106,6 +110,14 @@ class Table(object):
 
         return Table(self.header() + other_table.header(), rows)
 
+    def merge(self, other_table):
+        if self.header() != other_table.header():
+            raise ValueError("For tables to merge they must have the same header.")
+
+        rows = self.rows()
+        rows += other_table.rows()
+        return Table(self.header(), rows)
+
     def sort(self, name, reverse=False):
         col = self._find(name)
         rows = sorted(self.rows(), key=lambda row: row[col], reverse=reverse)
@@ -118,19 +130,23 @@ class Table(object):
         col = self._find(name)
         return self._columns[col][:limit]
 
-    def column_rows(self, names, limit=None):
+    def column_rows(self, names, limit=None, unique=False):
         columns = [self.column(name, limit) for name in names]
         as_rows = []
-        i = 0
 
-        while i < len(columns[0]):
-            as_row = []
+        if len(columns) > 0:
+            i = 0
 
-            for column in columns:
-                as_row += [column[i]]
+            while i < len(columns[0]):
+                as_row = []
 
-            as_rows += [as_row]
-            i += 1
+                for column in columns:
+                    as_row += [column[i]]
+
+                if as_row not in as_rows or not unique:
+                    as_rows += [as_row]
+
+                i += 1
 
         return as_rows
 
@@ -141,17 +157,26 @@ class Table(object):
         return len(self.rows())
 
     def header(self):
-        return self._header
+        return [h for h in self._header]
 
     def rows(self):
-        return self._rows
+        return [[d for d in row] for row in self._rows]
 
-    def draw(self):
-        lengths = [len(name) for name in self.header()]
-        format_str = "|".join(["{:.%ds}" % l for l in lengths])
-        lines = [format_str.format(*self.header())]
+    def draw(self, names=None):
+        if names is None:
+            headings = self.header()
+        else:
+            # Might as well quickly iterate these to make sure they are valid
+            for name in names:
+                self._find(name)
 
-        for row in self.rows():
+            headings = names
+
+        lengths = [len(name) for name in headings]
+        format_str = "|".join(["{:%d.%ds}" % (l, l) for l in lengths])
+        lines = [format_str.format(*headings)]
+
+        for row in self.column_rows(headings):
             lines += [format_str.format(*[str(r) for r in row])]
 
         return "\n".join(lines)
