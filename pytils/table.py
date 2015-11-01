@@ -18,6 +18,8 @@ class Table(object):
                 self._columns[i] += [row[i]]
 
     def refine(self, name=None, func_match=None, refinements=None):
+        """Produce a table, including only the rows matching some criteria.
+        """
         if refinements is not None:
             if name is not None or func_match is not None:
                 raise ValueError("May only define (name, func_match) or " \
@@ -56,6 +58,8 @@ class Table(object):
         return Table(self.header(), rows)
 
     def convert(self, name=None, func=None, conversions=None):
+        """Produce a table with values based on some transformations.
+        """
         if conversions is not None:
             if name is not None or func is not None:
                 raise ValueError("May only define (name, func) or " \
@@ -90,10 +94,14 @@ class Table(object):
         return Table(self.header(), rows)
 
     def narrow(self, names, unique=False):
-        data = self.column_rows(names, unique=unique)
+        """Produce a table, including only a the columns specified.
+        """
+        data = self.rows(names, unique=unique)
         return Table(names, data)
 
     def join(self, name, other_table, other_name):
+        """Produce a table which is the 'inner join' of this and another table.
+        """
         values = Counter(self.column(name)).keys()
         other_values = Counter(other_table.column(other_name)).keys()
 
@@ -111,6 +119,8 @@ class Table(object):
         return Table(self.header() + other_table.header(), rows)
 
     def merge(self, other_table):
+        """Produce a table which is the combination of this and another table.
+        """
         if self.header() != other_table.header():
             raise ValueError("For tables to merge they must have the same header.")
 
@@ -130,26 +140,6 @@ class Table(object):
         col = self._find(name)
         return self._columns[col][:limit]
 
-    def column_rows(self, names, limit=None, unique=False):
-        columns = [self.column(name, limit) for name in names]
-        as_rows = []
-
-        if len(columns) > 0:
-            i = 0
-
-            while i < len(columns[0]):
-                as_row = []
-
-                for column in columns:
-                    as_row += [column[i]]
-
-                if as_row not in as_rows or not unique:
-                    as_rows += [as_row]
-
-                i += 1
-
-        return as_rows
-
     def width(self):
         return len(self.header())
 
@@ -159,8 +149,30 @@ class Table(object):
     def header(self):
         return [h for h in self._header]
 
-    def rows(self):
-        return [[d for d in row] for row in self._rows]
+    def rows(self, names=None, limit=None, unique=False):
+        headers = self.header()
+
+        if names is not None:
+            headers = names
+
+        columns = [self.column(name, limit) for name in headers]
+        as_rows = []
+
+        if len(columns) > 0:
+            row_index = 0
+
+            while row_index < len(columns[0]):
+                as_row = []
+
+                for column in columns:
+                    as_row += [column[row_index]]
+
+                if as_row not in as_rows or not unique:
+                    as_rows += [as_row]
+
+                row_index += 1
+
+        return as_rows
 
     def draw(self, names=None):
         if names is None:
@@ -176,7 +188,7 @@ class Table(object):
         format_str = "|".join(["{:%d.%ds}" % (l, l) for l in lengths])
         lines = [format_str.format(*headings)]
 
-        for row in self.column_rows(headings):
+        for row in self.rows(headings):
             lines += [format_str.format(*[str(r) for r in row])]
 
         return "\n".join(lines)
