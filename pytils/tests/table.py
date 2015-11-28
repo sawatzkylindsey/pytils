@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from pytils.table import Table
+from pytils.table import Table, INDEXING
 from pytils.invigilator import create_suite
 
 
@@ -86,6 +86,44 @@ class Tests(TestCase):
         self.assertEqual(converted.rows(), [
             [1, "2", "3"],
             [4, "5", "6"]
+        ])
+
+    def test_table_extend(self):
+        table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6")
+
+        extended = table.extend(["col1"], lambda v: int(v), "col4")
+        self.assertEqual(extended.header(), ["col1", "col2", "col3", "col4"])
+        self.assertEqual(extended.rows(), [
+            ["1", "2", "3", 1],
+            ["4", "5", "6", 4]
+        ])
+
+        extended = table.extend(extensions=[
+                {
+                    "names": ["col1"],
+                    "func": lambda v: -1,
+                    "target": "col6"
+                },
+                {
+                    "names": ["col1"],
+                    "func": lambda v: int(v),
+                    "target": "col5"
+                },
+                {
+                    "names": ["col2", "col1", "col3"],
+                    "func": lambda a, b, c: a + b + c,
+                    "target": "col4"
+                },
+                {
+                    "names": [],
+                    "func": lambda: "abc",
+                    "target": "dude"
+                }
+            ])
+        self.assertEqual(extended.header(), ["col1", "col2", "col3", "col6", "col5", "col4", "dude"])
+        self.assertEqual(extended.rows(), [
+            ["1", "2", "3", -1, 1, "213", "abc"],
+            ["4", "5", "6", -1, 4, "546", "abc"]
         ])
 
     def test_table_sort(self):
@@ -191,6 +229,11 @@ class Tests(TestCase):
             [1, "2", "3"],
             [4, "5", "6"]
         ])
+
+        table = Table.load_csv("col1,col2,col1,col1\n1,2,3,4",
+            rename_strategy=INDEXING)
+        self.assertEqual(table.header(),
+                         ["col1_0", "col2", "col1_1", "col1_2"])
 
     def test_table_equality(self):
         table_a = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6")

@@ -2,6 +2,9 @@ from collections import Counter
 from csv import reader as csv_reader
 
 
+INDEXING = "indexing"
+
+
 class Table(object):
     def __init__(self, header=[], rows=[]):
         super(Table, self).__init__()
@@ -16,6 +19,17 @@ class Table(object):
 
             for i in range(0, self.width()):
                 self._columns[i] += [row[i]]
+
+        header_set = set(self._header)
+
+        if len(header_set) < len(self._header):
+            duplicates = self.header()
+
+            for h in header_set:
+                duplicates.remove(h)
+
+            raise ValueError("Each header must be uniquely named.  " \
+                "Found duplicates: [%s]." % ",".join(duplicates))
 
     def refine(self, name=None, func_match=None, refinements=None):
         """Produce a table, including only the rows matching some criteria.
@@ -71,27 +85,71 @@ class Table(object):
             raise ValueError("Must define either (name, func) or " \
                 "conversions.")
 
-        conversion = [lambda v: v for i in range(0, self.width())]
+        transformations = [lambda v: v for i in range(0, self.width())]
 
         if conversions is None:
             col = self._find(name)
-            conversion[col] = func
+            transformations[col] = func
         else:
             for name, func in conversions.items():
                 col = self._find(name)
-                conversion[col] = func
+                transformations[col] = func
 
         rows = []
 
         for data in self.rows():
             row = []
 
-            for i in range(0, self.width()):
-                row += [conversion[i](data[i])]
+            for i in range(0, len(transformations)):
+                row += [transformations[i](data[i])]
 
             rows += [row]
 
         return Table(self.header(), rows)
+
+    def extend(self, names=None, func=None, target=None, extensions=None):
+        """Produce a table with new columns based on some transformations.
+        """
+        if extensions is not None:
+            if names is not None or func is not None and target is not None:
+                raise ValueError("May only define (names, func, target) or " \
+                    "extensions, but not both.")
+
+            if not isinstance(extensions, list):
+                raise TypeError("Extensions must be a list.")
+        elif names is None or func is None or target is None:
+            raise ValueError("Must define either (names, func, target) or " \
+                "extensions.")
+
+        transformations = []
+
+        if extensions is None:
+            transformations += [{
+                "cols": [self._find(name) for name in names],
+                "func": func,
+                "target": target
+            }]
+        else:
+            for ext in extensions:
+                transformations += [{
+                    "cols": [self._find(name) for name in ext["names"]],
+                    "func": ext["func"],
+                    "target": ext["target"]
+                }]
+
+        extended_headers = [trans["target"] for trans in transformations]
+        rows = []
+
+        for data in self.rows():
+            row = [d for d in data]
+
+            for trans in transformations:
+                sources = [data[col] for col in trans["cols"]]
+                row += [trans["func"](*sources)]
+
+            rows += [row]
+
+        return Table(self.header() + extended_headers, rows)
 
     def narrow(self, names, unique=False):
         """Produce a table, including only a the columns specified.
@@ -214,7 +272,7 @@ class Table(object):
         return str(self)
 
     @staticmethod
-    def load_csv(csv, conversions=None):
+    def load_csv(csv, conversions=None, rename_strategy=None):
         if isinstance(csv, str):
             reader = csv_reader(csv.split("\n"))
         else:
@@ -226,6 +284,9 @@ class Table(object):
         for data in reader:
             if header is None:
                 header = data
+
+                if rename_strategy is not None:
+                    header = Table.rename(header, rename_strategy)
             else:
                 rows += [data]
 
@@ -235,4 +296,25 @@ class Table(object):
             return base.convert(conversions=conversions)
         else:
             return base
+
+    @staticmethod
+    def rename(header, rename_strategy):
+        renamed_header = [name for name in header]
+
+        if rename_strategy == INDEXING:
+            counts = Counter(header)
+            indexes = {}
+            renamed_header = []
+
+            for name in header:
+                if counts[name] > 1:
+                    if name not in indexes:
+                        indexes[name] = 0
+
+                    renamed_header += ["%s_%s" % (name, indexes[name])]
+                    indexes[name] += 1
+                else:
+                    renamed_header += [name]
+
+        return renamed_header
 
