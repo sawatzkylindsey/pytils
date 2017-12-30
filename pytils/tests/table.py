@@ -126,6 +126,69 @@ class Tests(TestCase):
             ["4", "5", "6", -1, 4, "546", "abc"]
         ])
 
+    def test_table_narrow(self):
+        table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6\n4,5,7")
+        self.assertEqual(table.narrow(["col1", "col2"]).rows(), [["1", "2"], ["4", "5"], ["4", "5"]])
+        self.assertEqual(table.narrow(["col1", "col2"], unique=True).rows(), [["1", "2"], ["4", "5"]])
+        self.assertEqual(table.narrow(["col3", "col2"]).rows(), [["3", "2"], ["6", "5"], ["7", "5"]])
+        self.assertEqual(table.narrow(["col3"]).rows(), [["3"], ["6"], ["7"]])
+        self.assertEqual(table.narrow([]).rows(), [])
+
+        self.assertEqual(table.narrow(["col1", "col2"]).rows(), [["1", "2"], ["4", "5"], ["4", "5"]])
+
+    def test_table_drop(self):
+        table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6\n4,5,7")
+        self.assertEqual(table.drop(["col3"]).rows(), [["1", "2"], ["4", "5"], ["4", "5"]])
+        self.assertEqual(table.drop(["col3"], unique=True).rows(), [["1", "2"], ["4", "5"]])
+        self.assertEqual(table.drop(["col1"]).rows(), [["2", "3"], ["5", "6"], ["5", "7"]])
+        self.assertEqual(table.drop(["col1", "col2"]).rows(), [["3"], ["6"], ["7"]])
+        self.assertEqual(table.drop([]).rows(), table.rows())
+
+        self.assertEqual(table.drop(["col3"]).rows(), [["1", "2"], ["4", "5"], ["4", "5"]])
+
+    def test_table_join(self):
+        table_a = Table.load_csv("id,name\n1,alice\n2,bob\n3,eve")
+        table_b = Table.load_csv("fid,spirit\n1,virtuous\n1,delightful\n3,evil\n0,moot")
+        joined = table_a.join("id", table_b, "fid")
+
+        self.assertEqual(joined.header(), ["id", "name", "fid", "spirit"])
+        self.assertEqual(joined.sort("spirit").rows(), [
+            ["1", "alice", "1", "delightful"],
+            ["3", "eve", "3", "evil"],
+            ["1", "alice", "1", "virtuous"]
+        ])
+
+    def test_table_merge(self):
+        table_1 = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6",
+            {"col1": lambda v: int(v)})
+        table_2 = Table.load_csv("col1,col2,col3\n7,8,9\n10,11,12")
+        table = table_1.merge(table_2)
+
+        self.assertEqual(table.rows(), [
+            [1, "2", "3"],
+            [4, "5", "6"],
+            ["7", "8", "9"],
+            ["10", "11", "12"]
+        ])
+
+    def test_table_top(self):
+        table = Table.load_csv("col1,col2\n1,2\n3,4\n5,6")
+        self.assertEqual(table.top(4).rows(), table.rows())
+        self.assertEqual(table.top(3).rows(), table.rows())
+        self.assertEqual(table.top(2).rows(), [["1", "2"], ["3", "4"]])
+        self.assertEqual(table.top(1).rows(), [["1", "2"]])
+        self.assertEqual(table.top(0).rows(), [])
+        self.assertEqual(table.top(-1).rows(), [])
+
+    def test_table_bottom(self):
+        table = Table.load_csv("col1,col2\n1,2\n3,4\n5,6")
+        self.assertEqual(table.bottom(4).rows(), table.rows())
+        self.assertEqual(table.bottom(3).rows(), table.rows())
+        self.assertEqual(table.bottom(2).rows(), [["3", "4"], ["5", "6"]])
+        self.assertEqual(table.bottom(1).rows(), [["5", "6"]])
+        self.assertEqual(table.bottom(0).rows(), [])
+        self.assertEqual(table.bottom(-1).rows(), [])
+
     def test_table_sort(self):
         table = Table.load_csv("col1,col2,col3\n1,2,3\n4,1,6")
 
@@ -165,6 +228,15 @@ class Tests(TestCase):
             [None]
         ])
 
+    def test_table_shuffle(self):
+        table = Table.load_csv("col1,col2\n1,2\n3,4\n5,6\n7,8\n9,10\n11,12")
+        table_shuffle = table.shuffle()
+        self.assertEqual(table_shuffle.height(), table.height())
+        self.assertEqual(table_shuffle.width(), table.width())
+
+        for row in table.rows():
+            self.assertTrue(row in table_shuffle.rows())
+
     def test_table_column(self):
         table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6")
         self.assertEqual(table.column("col1"), ["1", "4"])
@@ -184,41 +256,6 @@ class Tests(TestCase):
         self.assertEqual(table.rows([]), [])
 
         self.assertEqual(table.rows(["col1", "col2"], 1), [["1", "2"]])
-
-    def test_table_narrow(self):
-        table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6\n4,5,7")
-        self.assertEqual(table.narrow(["col1", "col2"]).rows(), [["1", "2"], ["4", "5"], ["4", "5"]])
-        self.assertEqual(table.narrow(["col1", "col2"], unique=True).rows(), [["1", "2"], ["4", "5"]])
-        self.assertEqual(table.narrow(["col3", "col2"]).rows(), [["3", "2"], ["6", "5"], ["7", "5"]])
-        self.assertEqual(table.narrow(["col3"]).rows(), [["3"], ["6"], ["7"]])
-        self.assertEqual(table.narrow([]).rows(), [])
-
-        self.assertEqual(table.narrow(["col1", "col2"]).rows(), [["1", "2"], ["4", "5"], ["4", "5"]])
-
-    def test_table_join(self):
-        table_a = Table.load_csv("id,name\n1,alice\n2,bob\n3,eve")
-        table_b = Table.load_csv("fid,spirit\n1,virtuous\n1,delightful\n3,evil\n0,moot")
-        joined = table_a.join("id", table_b, "fid")
-
-        self.assertEqual(joined.header(), ["id", "name", "fid", "spirit"])
-        self.assertEqual(joined.sort("spirit").rows(), [
-            ["1", "alice", "1", "delightful"],
-            ["3", "eve", "3", "evil"],
-            ["1", "alice", "1", "virtuous"]
-        ])
-
-    def test_table_merge(self):
-        table_1 = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6",
-            {"col1": lambda v: int(v)})
-        table_2 = Table.load_csv("col1,col2,col3\n7,8,9\n10,11,12")
-        table = table_1.merge(table_2)
-
-        self.assertEqual(table.rows(), [
-            [1, "2", "3"],
-            [4, "5", "6"],
-            ["7", "8", "9"],
-            ["10", "11", "12"]
-        ])
 
     def test_table_load_csv(self):
         table = Table.load_csv("col1,col2,col3\n1,2,3\n4,5,6",

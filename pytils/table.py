@@ -1,5 +1,9 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 from collections import Counter
 from csv import reader as csv_reader
+import random
 
 
 INDEXING = "indexing"
@@ -157,6 +161,16 @@ class Table(object):
         data = self.rows(names, unique=unique)
         return Table(names, data)
 
+    def drop(self, names, unique=False):
+        """Produce a table including all columns except those specified.
+        """
+        columns = self.header()
+
+        for name in names:
+            columns.remove(name)
+
+        return self.narrow(columns, unique)
+
     def join(self, name, other_table, other_name):
         """Produce a table which is the 'inner join' of this and another table.
         """
@@ -186,9 +200,44 @@ class Table(object):
         rows += other_table.rows()
         return Table(self.header(), rows)
 
+    def top(self, n):
+        rows = []
+
+        if n <= 0:
+            return Table(self.header(), rows)
+
+        i = 0
+
+        for data in self.rows():
+            rows += [data]
+            i += 1
+
+            if i >= n:
+                break
+
+        return Table(self.header(), rows)
+
+    def bottom(self, n):
+        rows = []
+        i = 0
+        c = self.height() - n
+
+        for data in self.rows():
+            if i >= c:
+                rows += [data]
+
+            i += 1
+
+        return Table(self.header(), rows)
+
     def sort(self, name, reverse=False):
         col = self._find(name)
         rows = sorted(self.rows(), key=lambda row: row[col], reverse=reverse)
+        return Table(self.header(), rows)
+
+    def shuffle(self):
+        rows = self.rows()
+        random.shuffle(rows)
         return Table(self.header(), rows)
 
     def column(self, name, limit=None):
