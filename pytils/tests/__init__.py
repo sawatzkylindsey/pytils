@@ -1,5 +1,5 @@
 from pytils.invigilator import create_suite
-from pytils.tests import table
+from pytils.tests import check, table
 
 
 def all():
@@ -8,5 +8,6 @@ def all():
 
 def unit():
     return [
-        table.tests()
+        check.tests(),
+        table.tests(),
     ]
