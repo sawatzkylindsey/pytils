@@ -214,10 +214,10 @@ class Tests(TestCase):
             ["4", "1", "6"]
         ])
 
-        table = Table(["col"], [["2"], ["1"], [None]])
+        table = Table(["col"], [["2"], ["1"], ["0"]])
         sortd = table.sort("col")
         self.assertEqual(sortd.rows(), [
-            [None],
+            ["0"],
             ["1"],
             ["2"]
         ])
@@ -225,7 +225,7 @@ class Tests(TestCase):
         self.assertEqual(sortd.rows(), [
             ["2"],
             ["1"],
-            [None]
+            ["0"]
         ])
 
     def test_table_shuffle(self):

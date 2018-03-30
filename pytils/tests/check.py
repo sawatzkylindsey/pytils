@@ -10,8 +10,9 @@ class Tests(TestCase):
             check.check_not_none(None)
             raise AssertionError("unexpected success")
         except ValueError as e:
-            self.assertEqual(e.message, "value is unexpectedly None")
+            self.assertEqual(str(e), "value is unexpectedly None")
 
 
 def tests():
     return create_suite(Tests)
+

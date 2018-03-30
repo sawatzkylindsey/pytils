@@ -311,7 +311,7 @@ class Table(object):
     def __eq__(self, other):
         return self.header() == other.header() and self.rows() == other.rows()
 
-    def __str__(self):
+    def __repr__(self):
         return "Table: (width=%d, height=%d)" % (self.width(), self.height())
 
     def __unicode__(self):

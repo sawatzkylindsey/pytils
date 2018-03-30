@@ -3,6 +3,9 @@ default: build
 test:
 	coverage run --append --source=pytils -m unittest pytils.tests.all
 
+report:
+	coverage report -m
+
 clean:
 	rm -rf build
 	rm -rf dist
