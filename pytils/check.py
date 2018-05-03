@@ -56,6 +56,15 @@ def check_list_or_set(value):
     return value
 
 
+def check_iterable(value):
+    try:
+        discard = iter(value)
+    except TypeError as e:
+        raise ValueError("value '%s' is unexpectedly not iterable" % value)
+
+    return value
+
+
 def check_not_equal(value, other):
     if value == other:
         raise ValueError("value '%s' is unexpectedly equal to '%s'" % (value, other))
