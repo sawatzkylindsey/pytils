@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+from logging.handlers import RotatingFileHandler
 import sys
 
 USER = "user"
@@ -19,7 +20,8 @@ def setup_logging(root_log_file, verbose, callsite=False):
         user_log.setLevel(logging.INFO)
         logging.getLogger().setLevel(logging.INFO)
 
-    root_handler = logging.FileHandler(root_log_file, encoding = "UTF-8")
+    #                                                                  5MBs
+    root_handler = RotatingFileHandler(root_log_file, maxBytes=5*1024*1024, backupCount=5, encoding="utf-8")
     root_handler.setFormatter(logging.Formatter(CALLSITE_FORMATTER if callsite else DEFAULT_FORMATTER))
     logging.getLogger().addHandler(root_handler)
 
