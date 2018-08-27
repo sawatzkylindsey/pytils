@@ -3,6 +3,7 @@
 
 import logging
 from logging.handlers import RotatingFileHandler
+import pdb
 from queue import Queue
 from threading import Thread
 import sys
@@ -29,23 +30,37 @@ class AsynchRotatingFileHandler(RotatingFileHandler):
         while True:
             super(AsynchRotatingFileHandler, self).emit(self._queue.get())
 
+    def close(self):
+        while not self._queue.empty():
+            super(AsynchRotatingFileHandler, self).emit(self._queue.get())
 
-def setup_logging(root_log_file, verbose, callsite=False):
-    logging.getLogger().setLevel(logging.DEBUG)
+        super(AsynchRotatingFileHandler, self).close()
 
+
+def setup_logging(root_log_file, verbose, user_verbose, callsite=False):
     if verbose:
-        user_log.setLevel(logging.DEBUG)
         logging.getLogger().setLevel(logging.DEBUG)
     else:
-        user_log.setLevel(logging.INFO)
         logging.getLogger().setLevel(logging.INFO)
+
+    if user_verbose:
+        user_log.setLevel(logging.DEBUG)
+    else:
+        user_log.setLevel(logging.INFO)
 
     #                                                                       5MBs
     root_handler = AsynchRotatingFileHandler(root_log_file, maxBytes=5*1024*1024, backupCount=5, encoding="utf-8")
     root_handler.setFormatter(logging.Formatter(CALLSITE_FORMATTER if callsite else DEFAULT_FORMATTER))
+    _clear_handlers(logging.getLogger())
     logging.getLogger().addHandler(root_handler)
+    logging.debug("setup_logging(%s, %s, %s, %s)" % (root_log_file, verbose, user_verbose, callsite))
 
     user_handler = logging.StreamHandler(sys.stdout)
     user_handler.setFormatter(logging.Formatter("%(message)s"))
+    _clear_handlers(user_log)
     user_log.addHandler(user_handler)
+
+def _clear_handlers(logger):
+    for handler in logger.handlers:
+        logger.removeHandler(handler)
 
