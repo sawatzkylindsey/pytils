@@ -4,8 +4,10 @@ setup(
     name="pytils",
     version="0.0",
     packages=[
-        "pytils"
+        "pytils",
     ],
     install_requires=[],
-    scripts=[]
+    scripts=[
+        "profile-stats.py",
+    ]
 )
