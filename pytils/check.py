@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import collections
+import math
 
 
 def check_not_none(value):
@@ -82,6 +83,19 @@ def check_equal(value, other):
 def check_one_of(value, options):
     if value not in options:
         raise ValueError("value '%s' is unexpectedly not one of '%s'" % (value, options))
+
+    return value
+
+
+def check_pdist(value):
+    # Assume some iterable
+    probabilities = value
+
+    if isinstance(value, dict):
+        probabilities = value.values()
+
+    if not math.isclose(1.0, sum(probabilities), abs_tol=0.005):
+        raise ValueError("value '%s' unexpectedly does not represent a probability distribution" % (probabilities))
 
     return value
 
