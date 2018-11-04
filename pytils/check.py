@@ -50,9 +50,23 @@ def check_instance(value, instance):
     return value
 
 
+def check_list(value):
+    if not isinstance(value, list):
+        raise ValueError("value '%s' is unexpectedly not a list" % value)
+
+    return value
+
+
 def check_list_or_set(value):
     if not isinstance(value, list) and not isinstance(value, set):
         raise ValueError("value '%s' is unexpectedly not a list or a set" % value)
+
+    return value
+
+
+def check_dict(value):
+    if not isinstance(value, dict):
+        raise ValueError("value '%s' is unexpectedly not a dict" % value)
 
     return value
 
