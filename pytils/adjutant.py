@@ -8,3 +8,7 @@ def dict_as_str(d, use_key=True, reverse=False):
 
     return "{%s}" % ", ".join(out)
 
+
+def flat_map(sequence):
+    return [i for item in sequence for i in item]
+
