@@ -90,7 +90,7 @@ def check_iterable(value):
 def check_iterable_of_instances(value, instance):
     for v in check_iterable(value):
         if not isinstance(v, instance):
-            raise ValueError("item '%s' is unexpectedly not an instance '%s'" % (v, instance))
+            raise ValueError("item '%s' inside iterable is unexpectedly not an instance '%s'" % (v, instance))
 
     return value
 
@@ -137,6 +137,13 @@ def check_gt(value, target):
     return value
 
 
+def check_probability(value):
+    if value < 0.0 or value > 1.0:
+        raise ValueError("value '%s' is unexpectedly not a probability" % value)
+
+    return value
+
+
 def check_length(value, expected):
     if len(value) != expected:
         raise ValueError("value '%s' ('%d') is unexpectedly not of length '%d'" % (value, len(value), expected))
@@ -158,7 +165,7 @@ def check_pdist(value):
     if isinstance(value, dict):
         probabilities = value.values()
 
-    if not math.isclose(1.0, sum(probabilities), abs_tol=0.005):
+    if not math.isclose(1.0, sum([check_probability(p) for p in probabilities]), abs_tol=0.005):
         raise ValueError("value '%s' unexpectedly does not represent a probability distribution" % (probabilities))
 
     return value
