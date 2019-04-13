@@ -6,11 +6,16 @@ import math
 import os
 
 
-skip = "pytils_skip_check" in os.environ
+check_on = "pytils_check_on" in os.environ
+
+
+def activate():
+    global check_on
+    check_on = True
 
 
 def check_not_none(value):
-    if skip:
+    if not check_on:
         return value
 
     if value is None:
@@ -20,7 +25,7 @@ def check_not_none(value):
 
 
 def check_none(value):
-    if skip:
+    if not check_on:
         return value
 
     if value is not None:
@@ -30,7 +35,7 @@ def check_none(value):
 
 
 def check_not_empty(value):
-    if skip:
+    if not check_on:
         return value
 
     if len(value) == 0:
@@ -43,7 +48,7 @@ def check_not_empty(value):
 
 
 def check_not_contains(value, substr):
-    if skip:
+    if not check_on:
         return value
 
     if substr in value:
@@ -53,7 +58,7 @@ def check_not_contains(value, substr):
 
 
 def check_not_instance(value, instance):
-    if skip:
+    if not check_on:
         return value
 
     if isinstance(value, instance):
@@ -63,7 +68,7 @@ def check_not_instance(value, instance):
 
 
 def check_instance(value, instance):
-    if skip:
+    if not check_on:
         return value
 
     if not isinstance(value, instance):
@@ -73,7 +78,7 @@ def check_instance(value, instance):
 
 
 def check_list(value):
-    if skip:
+    if not check_on:
         return value
 
     if not isinstance(value, list):
@@ -83,7 +88,7 @@ def check_list(value):
 
 
 def check_set(value):
-    if skip:
+    if not check_on:
         return value
 
     if not isinstance(value, set):
@@ -93,7 +98,7 @@ def check_set(value):
 
 
 def check_list_or_set(value):
-    if skip:
+    if not check_on:
         return value
 
     if not isinstance(value, list) and not isinstance(value, set):
@@ -103,7 +108,7 @@ def check_list_or_set(value):
 
 
 def check_dict(value):
-    if skip:
+    if not check_on:
         return value
 
     if not isinstance(value, dict):
@@ -113,7 +118,7 @@ def check_dict(value):
 
 
 def check_iterable(value):
-    if skip:
+    if not check_on:
         return value
 
     try:
@@ -125,7 +130,7 @@ def check_iterable(value):
 
 
 def check_iterable_of_instances(value, instance):
-    if skip:
+    if not check_on:
         return value
 
     for v in check_iterable(value):
@@ -136,7 +141,7 @@ def check_iterable_of_instances(value, instance):
 
 
 def check_not_equal(value, other):
-    if skip:
+    if not check_on:
         return value
 
     if value == other:
@@ -146,7 +151,7 @@ def check_not_equal(value, other):
 
 
 def check_equal(value, other):
-    if skip:
+    if not check_on:
         return value
 
     if value != other:
@@ -156,7 +161,7 @@ def check_equal(value, other):
 
 
 def check_lte(value, target):
-    if skip:
+    if not check_on:
         return value
 
     if value > target:
@@ -166,7 +171,7 @@ def check_lte(value, target):
 
 
 def check_gte(value, target):
-    if skip:
+    if not check_on:
         return value
 
     if value < target:
@@ -176,7 +181,7 @@ def check_gte(value, target):
 
 
 def check_lt(value, target):
-    if skip:
+    if not check_on:
         return value
 
     if value >= target:
@@ -186,7 +191,7 @@ def check_lt(value, target):
 
 
 def check_gt(value, target):
-    if skip:
+    if not check_on:
         return value
 
     if value <= target:
@@ -196,7 +201,7 @@ def check_gt(value, target):
 
 
 def check_probability(value):
-    if skip:
+    if not check_on:
         return value
 
     if value < 0.0 or value > 1.0:
@@ -206,7 +211,7 @@ def check_probability(value):
 
 
 def check_length(value, expected):
-    if skip:
+    if not check_on:
         return value
 
     if len(value) != expected:
@@ -216,7 +221,7 @@ def check_length(value, expected):
 
 
 def check_one_of(value, options):
-    if skip:
+    if not check_on:
         return value
 
     if value not in options:
@@ -226,7 +231,7 @@ def check_one_of(value, options):
 
 
 def check_pdist(value):
-    if skip:
+    if not check_on:
         return value
 
     # Assume some iterable
