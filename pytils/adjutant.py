@@ -1,4 +1,6 @@
 
+import numbers
+
 
 def dict_as_str(d, sort_by_key=True, reverse=False, digits=4):
     if len(d) == 0:
@@ -11,7 +13,7 @@ def dict_as_str(d, sort_by_key=True, reverse=False, digits=4):
 
         if isinstance(item, int):
             form = "d"
-        elif isinstance(item, float):
+        elif isinstance(item, float) or isinstance(item, numbers.Number):
             form = ".%df" % digits
 
         return form
