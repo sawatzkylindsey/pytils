@@ -5,6 +5,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import pdb
 from queue import Queue
+import time
 from threading import Thread
 import sys
 
@@ -36,13 +37,25 @@ class AsynchRotatingFileHandler(RotatingFileHandler):
 
     def _process(self):
         while not self._closed:
-            super(AsynchRotatingFileHandler, self).emit(self._queue.get())
+            record = self._queue.get()
+
+            if record is not None:
+                super(AsynchRotatingFileHandler, self).emit(record)
 
     def close(self):
         self._closed = True
+        # Add a marker record to ensure the background thread can leave its _queue.get() call.
+        # Otherwise there is a race between the last log to be written and this close method which may result in the handler never terminating.
+        self._queue.put(None)
+
+        while self._thread.is_alive():
+            time.sleep(0.1)
 
         while not self._queue.empty():
-            super(AsynchRotatingFileHandler, self).emit(self._queue.get())
+            record = self._queue.get()
+
+            if record is not None:
+                super(AsynchRotatingFileHandler, self).emit(record)
 
         super(AsynchRotatingFileHandler, self).close()
 
@@ -108,6 +121,7 @@ def teardown(function):
         try:
             return function(*args, **kwargs)
         finally:
+            _clear_handlers(user_log)
             _clear_handlers(logging.getLogger())
 
     return wrapper
