@@ -43,3 +43,15 @@ def dict_as_str(d, sort_by_key=True, reverse=False, digits=4):
 def flat_map(sequence):
     return [i for item in sequence for i in item]
 
+
+class Closeable:
+    def __init__(self, handle_fn, close_fn):
+        self.handle_fn = handle_fn
+        self.close_fn = close_fn
+
+    def __enter__(self):
+        return self.handle_fn()
+
+    def __exit__(self, exception_type, exception, traceback):
+        self.close_fn()
+
