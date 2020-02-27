@@ -57,10 +57,11 @@ def check_not_instance(value, instance):
     return value
 
 
-def check_instance(value, instance):
+def check_instance(value, instance, noneable=False):
     if check_on:
-        if not isinstance(value, instance):
-            raise ValueError("value '%s' is unexpectedly not an instance '%s'" % (value, instance))
+        if not isinstance(value, instance) and (not noneable or value is not None):
+            suffix = " or None" if noneable else ""
+            raise ValueError("value '%s' is unexpectedly not an instance '%s'%s" % (value, instance, suffix))
 
     return value
 
