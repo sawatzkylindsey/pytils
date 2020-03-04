@@ -52,16 +52,21 @@ def check_not_contains(value, substr):
 def check_not_instance(value, instance):
     if check_on:
         if isinstance(value, instance):
-            raise ValueError("value '%s' is unexpectedly an instance '%s'" % (value, instance))
+            raise ValueError("value '%s' is unexpectedly an instance %s" % (value, instance))
 
     return value
 
 
-def check_instance(value, instance, noneable=False):
+def check_instance(value, instance_s, noneable=False):
     if check_on:
-        if not isinstance(value, instance) and (not noneable or value is not None):
-            suffix = " or None" if noneable else ""
-            raise ValueError("value '%s' is unexpectedly not an instance '%s'%s" % (value, instance, suffix))
+        if _is_iterable(instance_s):
+            if not any([isinstance(value, i) for i in instance_s]) and (not noneable or value is not None):
+                suffix = " or None" if noneable else ""
+                raise ValueError("value '%s' is unexpectedly not an instance %s%s" % (value, " or ".join([str(i) for i in instance_s]), suffix))
+        else:
+            if not isinstance(value, instance_s) and (not noneable or value is not None):
+                suffix = " or None" if noneable else ""
+                raise ValueError("value '%s' is unexpectedly not an instance %s%s" % (value, instance_s, suffix))
 
     return value
 
@@ -100,19 +105,21 @@ def check_dict(value):
 
 def check_iterable(value):
     if check_on:
-        try:
-            discard = iter(value)
-        except TypeError as e:
+        if not _is_iterable(value):
             raise ValueError("value '%s' is unexpectedly not iterable" % value)
 
     return value
 
 
-def check_iterable_of_instances(value, instance):
+def check_iterable_of_instances(value, instance_s):
     if check_on:
         for v in check_iterable(value):
-            if not isinstance(v, instance):
-                raise ValueError("item '%s' inside iterable is unexpectedly not an instance '%s'" % (v, instance))
+            if _is_iterable(instance_s):
+                if not any([isinstance(v, i) for i in instance_s]):
+                    raise ValueError("item '%s' inside iterable is unexpectedly not an instance %s" % (v, " or ".join([str(i) for i in instance_s])))
+            else:
+                if not isinstance(v, instance_s):
+                    raise ValueError("item '%s' inside iterable is unexpectedly not an instance %s" % (v, instance_s))
 
     return value
 
@@ -189,10 +196,11 @@ def check_length(value, expected):
     return value
 
 
-def check_one_of(value, options):
+def check_one_of(value, options, noneable=False):
     if check_on:
-        if value not in options:
-            raise ValueError("value '%s' is unexpectedly not one of '%s'" % (value, options))
+        if value not in options and (not noneable or value is not None):
+            suffix = " or None" if noneable else ""
+            raise ValueError("value '%s' is unexpectedly not one of '%s'%s" % (value, options, suffix))
 
     return value
 
@@ -223,4 +231,12 @@ def check_exclusive(values):
                 (", ".join([k for k in values.keys()]), ", ".join(matched)))
 
     return matched[0]
+
+
+def _is_iterable(thing):
+    try:
+        discard = iter(thing)
+        return True
+    except TypeError:
+        return False
 
