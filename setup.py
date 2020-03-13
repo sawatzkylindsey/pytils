@@ -5,9 +5,11 @@ setup(
     version="0.0",
     packages=[
         "pytils",
+        "pytils.override",
     ],
     install_requires=[],
     scripts=[
-        "profile-stats.py",
+        "scripts/profile-stats.py",
+        "scripts/pretty-simple.py",
     ]
 )
