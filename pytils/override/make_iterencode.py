@@ -38,7 +38,7 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
         if _indent is not None and not ignore_indent:
             _current_indent_level += 1
             newline_indent = '\n' + _indent * _current_indent_level
-            separator = _item_separator + newline_indent
+            separator = _item_separator.rstrip() + newline_indent
             buf += newline_indent
         else:
             newline_indent = None
@@ -97,7 +97,7 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
         if _indent is not None:
             _current_indent_level += 1
             newline_indent = '\n' + _indent * _current_indent_level
-            item_separator = _item_separator + newline_indent
+            item_separator = _item_separator.rstrip() + newline_indent
             yield newline_indent
         else:
             newline_indent = None
