@@ -17,7 +17,12 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
     if _indent is not None and not isinstance(_indent, str):
         _indent = ' ' * _indent
 
-    def _is_simple(value):
+    def _is_simple(list_or_tuple):
+        if len(list_or_tuple) == 0:
+            # Unknown - count it as simple.
+            return True
+
+        value = list_or_tuple[0]
         return isinstance(value, str) \
             or value is None \
             or value is True \
@@ -68,7 +73,7 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
             else:
                 yield buf
                 if isinstance(value, (list, tuple)):
-                    if _is_simple(value[0]):
+                    if _is_simple(value):
                         chunks = _iterencode_list(value, _current_indent_level, True)
                     else:
                         chunks = _iterencode_list(value, _current_indent_level, False)
@@ -151,7 +156,7 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr,
                 yield _floatstr(value)
             else:
                 if isinstance(value, (list, tuple)):
-                    if _is_simple(value[0]):
+                    if _is_simple(value):
                         chunks = _iterencode_list(value, _current_indent_level, True)
                     else:
                         chunks = _iterencode_list(value, _current_indent_level, False)
