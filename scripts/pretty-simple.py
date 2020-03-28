@@ -7,7 +7,7 @@ import pdb
 import sys
 
 from pytils import io
-from pytils.override import make_iterencode
+import pytils.override
 
 
 def main(argv):
@@ -20,14 +20,12 @@ def main(argv):
 
 
 def pretty_simplify(source, indent):
-    original_make_iterencode = json.encoder._make_iterencode
-
     try:
         generator = io.stdin_generator() if source is None else io.file_generator(source)
-        json.encoder._make_iterencode = make_iterencode._make_iterencode
+        pytils.override.patch_json_encode()
         print(json.dumps(json.loads("".join(generator)), indent=indent, separators=(", ", ": ")))
     finally:
-        json.encoder._make_iterencode = original_make_iterencode
+        pytils.override.unpatch_json_encode()
 
 
 if __name__ == "__main__":
