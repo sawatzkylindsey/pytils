@@ -30,12 +30,12 @@ def check_none(value):
     return value
 
 
-def check_not_empty(value):
+def check_not_empty(value, noneable=False):
     if check_on:
-        if len(value) == 0:
+        if len(value) == 0 and (not noneable or value is not None):
             raise ValueError("value '%s' is unexpectedly empty" % value)
 
-        if isinstance(value, str) and len(value.lstrip()) == 0:
+        if isinstance(value, str) and len(value.lstrip()) == 0 and (not noneable or value is not None):
             raise ValueError("value '%s' is unexpectedly only whitespace" % value)
 
     return value
@@ -71,41 +71,41 @@ def check_instance(value, instance_s, noneable=False):
     return value
 
 
-def check_list(value):
+def check_list(value, noneable=False):
     if check_on:
-        if not isinstance(value, list):
+        if not isinstance(value, list) and (not noneable or value is not None):
             raise ValueError("value '%s' is unexpectedly not a list" % value)
 
     return value
 
 
-def check_set(value):
+def check_set(value, noneable=False):
     if check_on:
-        if not isinstance(value, set):
+        if not isinstance(value, set) and (not noneable or value is not None):
             raise ValueError("value '%s' is unexpectedly not a set" % value)
 
     return value
 
 
-def check_list_or_set(value):
+def check_list_or_set(value, noneable=False):
     if check_on:
-        if not isinstance(value, list) and not isinstance(value, set):
+        if not isinstance(value, list) and not isinstance(value, set) and (not noneable or value is not None):
             raise ValueError("value '%s' is unexpectedly not a list or a set" % value)
 
     return value
 
 
-def check_dict(value):
+def check_dict(value, noneable=False):
     if check_on:
-        if not isinstance(value, dict):
+        if not isinstance(value, dict) and (not noneable or value is not None):
             raise ValueError("value '%s' is unexpectedly not a dict" % value)
 
     return value
 
 
-def check_iterable(value):
+def check_iterable(value, noneable=False):
     if check_on:
-        if not _is_iterable(value):
+        if not _is_iterable(value) and (not noneable or value is not None):
             raise ValueError("value '%s' is unexpectedly not iterable" % value)
 
     return value
@@ -156,9 +156,9 @@ def check_gte(value, target):
     return value
 
 
-def check_range(value, lower, upper):
+def check_range(value, lower, upper, noneable=False):
     if check_on:
-        if value < lower or value > upper:
+        if (value < lower or value > upper) and (not noneable or value is not None):
             raise ValueError("value '%s' is unexpectedly not in range [%s, %s]" % (value, lower, upper))
 
     return value
