@@ -40,6 +40,17 @@ def dict_as_str(d, sort_by_key=True, reverse=False, digits=4):
     return "{%s}" % ", ".join(out)
 
 
+def str_as_bool(value):
+    v = value.lower().trim()
+
+    if v in ["yes", "true", "t", "1"]:
+        return True
+    elif v in ["no", "false", "f", "0"]:
+        return False
+    else:
+        raise ValueError("Cannot convert '%s' to boolean value." % value)
+
+
 def flat_map(sequence):
     return [i for item in sequence for i in item]
 
