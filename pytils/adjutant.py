@@ -51,8 +51,32 @@ def str_as_bool(value):
         raise ValueError("Cannot convert '%s' to boolean value." % value)
 
 
+def dict_invert(d):
+    out = {}
+
+    for key, value in d.items():
+        if value not in out:
+            out[value] = key
+        else:
+            raise ValueError("Cannot invert dictionary - duplicate key: '%s'." % (value))
+
+    return out
+
+
 def flat_map(sequence):
     return [i for item in sequence for i in item]
+
+
+def rindex(sequence, value):
+    i = len(sequence) - 1
+
+    while i >= 0:
+        if sequence[i] == value:
+            return i
+
+        i -= 1
+
+    return None
 
 
 class Closeable:

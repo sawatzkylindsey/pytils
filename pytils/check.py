@@ -25,7 +25,7 @@ def check_not_none(value):
 def check_none(value):
     if check_on:
         if value is not None:
-            raise ValueError("value '%s' is unexpectedly not None" % value)
+            raise ValueError("value '%s' is unexpectedly not None" % str(value))
 
     return value
 
@@ -33,10 +33,10 @@ def check_none(value):
 def check_not_empty(value, noneable=False):
     if check_on:
         if len(value) == 0 and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly empty" % value)
+            raise ValueError("value '%s' is unexpectedly empty" % str(value))
 
         if isinstance(value, str) and len(value.lstrip()) == 0 and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly only whitespace" % value)
+            raise ValueError("value '%s' is unexpectedly only whitespace" % str(value))
 
     return value
 
@@ -44,7 +44,7 @@ def check_not_empty(value, noneable=False):
 def check_not_contains(value, substr):
     if check_on:
         if substr in value:
-            raise ValueError("value '%s' unexpectedly contains '%s'" % (value, susbstr))
+            raise ValueError("value '%s' unexpectedly contains '%s'" % (str(value), str(susbstr)))
 
     return value
 
@@ -52,7 +52,7 @@ def check_not_contains(value, substr):
 def check_not_instance(value, instance):
     if check_on:
         if isinstance(value, instance):
-            raise ValueError("value '%s' is unexpectedly an instance %s" % (value, instance))
+            raise ValueError("value '%s' is unexpectedly an instance %s" % (str(value), str(instance)))
 
     return value
 
@@ -62,11 +62,11 @@ def check_instance(value, instance_s, noneable=False):
         if _is_iterable(instance_s):
             if not any([isinstance(value, i) for i in instance_s]) and (not noneable or value is not None):
                 suffix = " or None" if noneable else ""
-                raise ValueError("value '%s' is unexpectedly not an instance %s%s" % (value, " or ".join([str(i) for i in instance_s]), suffix))
+                raise ValueError("value '%s' is unexpectedly not an instance %s%s" % (str(value), " or ".join([str(i) for i in instance_s]), suffix))
         else:
             if not isinstance(value, instance_s) and (not noneable or value is not None):
                 suffix = " or None" if noneable else ""
-                raise ValueError("value '%s' is unexpectedly not an instance %s%s" % (value, instance_s, suffix))
+                raise ValueError("value '%s' is unexpectedly not an instance %s%s" % (str(value), instance_s, suffix))
 
     return value
 
@@ -74,7 +74,7 @@ def check_instance(value, instance_s, noneable=False):
 def check_list(value, noneable=False):
     if check_on:
         if not isinstance(value, list) and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly not a list" % value)
+            raise ValueError("value '%s' is unexpectedly not a list" % str(value))
 
     return value
 
@@ -82,7 +82,7 @@ def check_list(value, noneable=False):
 def check_set(value, noneable=False):
     if check_on:
         if not isinstance(value, set) and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly not a set" % value)
+            raise ValueError("value '%s' is unexpectedly not a set" % str(value))
 
     return value
 
@@ -90,7 +90,7 @@ def check_set(value, noneable=False):
 def check_list_or_set(value, noneable=False):
     if check_on:
         if not isinstance(value, list) and not isinstance(value, set) and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly not a list or a set" % value)
+            raise ValueError("value '%s' is unexpectedly not a list or a set" % str(value))
 
     return value
 
@@ -98,7 +98,7 @@ def check_list_or_set(value, noneable=False):
 def check_dict(value, noneable=False):
     if check_on:
         if not isinstance(value, dict) and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly not a dict" % value)
+            raise ValueError("value '%s' is unexpectedly not a dict" % str(value))
 
     return value
 
@@ -106,20 +106,21 @@ def check_dict(value, noneable=False):
 def check_iterable(value, noneable=False):
     if check_on:
         if not _is_iterable(value) and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly not iterable" % value)
+            raise ValueError("value '%s' is unexpectedly not iterable" % str(value))
 
     return value
 
 
-def check_iterable_of_instances(value, instance_s):
+def check_iterable_of_instances(value, instance_s, noneable=False):
     if check_on:
-        for v in check_iterable(value):
-            if _is_iterable(instance_s):
-                if not any([isinstance(v, i) for i in instance_s]):
-                    raise ValueError("item '%s' inside iterable is unexpectedly not an instance %s" % (v, " or ".join([str(i) for i in instance_s])))
-            else:
-                if not isinstance(v, instance_s):
-                    raise ValueError("item '%s' inside iterable is unexpectedly not an instance %s" % (v, instance_s))
+        if not noneable or value is not None:
+            for v in check_iterable(value):
+                if _is_iterable(instance_s):
+                    if not any([isinstance(v, i) for i in instance_s]):
+                        raise ValueError("item '%s' inside iterable is unexpectedly not an instance %s" % (str(v), " or ".join([str(i) for i in instance_s])))
+                else:
+                    if not isinstance(v, instance_s):
+                        raise ValueError("item '%s' inside iterable is unexpectedly not an instance %s" % (str(v), instance_s))
 
     return value
 
@@ -127,7 +128,7 @@ def check_iterable_of_instances(value, instance_s):
 def check_not_equal(value, other):
     if check_on:
         if value == other:
-            raise ValueError("value '%s' is unexpectedly equal to '%s'" % (value, other))
+            raise ValueError("value '%s' is unexpectedly equal to '%s'" % (str(value), str(other)))
 
     return value
 
@@ -135,15 +136,28 @@ def check_not_equal(value, other):
 def check_equal(value, other):
     if check_on:
         if value != other:
-            raise ValueError("value '%s' is unexpectedly not equal to '%s'" % (value, other))
+            raise ValueError("value '%s' is unexpectedly not equal to '%s'" % (str(value), str(other)))
 
     return value
+
+
+def check_condition(condition, failure_description):
+    condition_result = condition
+
+    if check_on:
+        if callable(condition):
+            condition_result = condition()
+
+        if not condition_result:
+            raise ValueError(failure_description)
+
+    return condition_result
 
 
 def check_lte(value, target):
     if check_on:
         if value > target:
-            raise ValueError("value '%s' is unexpectedly not less than or equal to '%s'" % (value, target))
+            raise ValueError("value '%s' is unexpectedly not less than or equal to '%s'" % (str(value), str(target)))
 
     return value
 
@@ -151,7 +165,7 @@ def check_lte(value, target):
 def check_gte(value, target):
     if check_on:
         if value < target:
-            raise ValueError("value '%s' is unexpectedly not greater than or equal to '%s'" % (value, target))
+            raise ValueError("value '%s' is unexpectedly not greater than or equal to '%s'" % (str(value), str(target)))
 
     return value
 
@@ -159,7 +173,7 @@ def check_gte(value, target):
 def check_range(value, lower, upper, noneable=False):
     if check_on:
         if (value < lower or value > upper) and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly not in range [%s, %s]" % (value, lower, upper))
+            raise ValueError("value '%s' is unexpectedly not in range [%s, %s]" % (str(value), str(lower), str(upper)))
 
     return value
 
@@ -167,7 +181,7 @@ def check_range(value, lower, upper, noneable=False):
 def check_lt(value, target):
     if check_on:
         if value >= target:
-            raise ValueError("value '%s' is unexpectedly not less than '%s'" % (value, target))
+            raise ValueError("value '%s' is unexpectedly not less than '%s'" % (str(value), str(target)))
 
     return value
 
@@ -175,7 +189,7 @@ def check_lt(value, target):
 def check_gt(value, target):
     if check_on:
         if value <= target:
-            raise ValueError("value '%s' is unexpectedly not greater than '%s'" % (value, target))
+            raise ValueError("value '%s' is unexpectedly not greater than '%s'" % (str(value), str(target)))
 
     return value
 
@@ -183,7 +197,7 @@ def check_gt(value, target):
 def check_probability(value):
     if check_on:
         if value < 0.0 or value > 1.0:
-            raise ValueError("value '%s' is unexpectedly not a probability" % value)
+            raise ValueError("value '%s' is unexpectedly not a probability" % str(value))
 
     return value
 
@@ -191,7 +205,7 @@ def check_probability(value):
 def check_length(value, expected):
     if check_on:
         if len(value) != expected:
-            raise ValueError("value '%s' ('%d') is unexpectedly not of length '%d'" % (value, len(value), expected))
+            raise ValueError("value '%s' ('%d') is unexpectedly not of length '%d'" % (str(value), len(value), expected))
 
     return value
 
@@ -200,7 +214,7 @@ def check_one_of(value, options, noneable=False):
     if check_on:
         if value not in options and (not noneable or value is not None):
             suffix = " or None" if noneable else ""
-            raise ValueError("value '%s' is unexpectedly not one of '%s'%s" % (value, options, suffix))
+            raise ValueError("value '%s' is unexpectedly not one of '%s'%s" % (str(value), str(options), suffix))
 
     return value
 
