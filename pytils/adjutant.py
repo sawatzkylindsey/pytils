@@ -1,6 +1,8 @@
 
 import numbers
 
+from pytils import check
+
 
 def dict_as_str(d, sort_by_key=True, reverse=False, digits=4):
     if len(d) == 0:
@@ -81,12 +83,17 @@ def rindex(sequence, value):
 
 class Closeable:
     def __init__(self, handle_fn, close_fn):
-        self.handle_fn = handle_fn
-        self.close_fn = close_fn
+        self.handle_fn = check.check_function(handle_fn)
+        self.close_fn = check.check_function(close_fn)
 
     def __enter__(self):
         return self.handle_fn()
 
     def __exit__(self, exception_type, exception, traceback):
         self.close_fn()
+
+
+class Closing(Closeable):
+    def __init__(self, item):
+        super().__init__(lambda: item, lambda: item.close())
 

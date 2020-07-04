@@ -32,11 +32,11 @@ def check_none(value):
 
 def check_not_empty(value, noneable=False):
     if check_on:
-        if len(value) == 0 and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly empty" % str(value))
+        if len(value) == 0 and _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexpectedly empty%s" % (str(value), _suffix_noneable(noneable)))
 
-        if isinstance(value, str) and len(value.lstrip()) == 0 and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly only whitespace" % str(value))
+        if isinstance(value, str) and len(value.lstrip()) == 0 and _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexpectedly only whitespace%s" % (str(value), _suffix_noneable(noneable)))
 
     return value
 
@@ -60,60 +60,58 @@ def check_not_instance(value, instance):
 def check_instance(value, instance_s, noneable=False):
     if check_on:
         if _is_iterable(instance_s):
-            if not any([isinstance(value, i) for i in instance_s]) and (not noneable or value is not None):
-                suffix = " or None" if noneable else ""
-                raise ValueError("value '%s' is unexpectedly not an instance %s%s" % (str(value), " or ".join([str(i) for i in instance_s]), suffix))
+            if not any([isinstance(value, i) for i in instance_s]) and _violates_noneable(value, noneable):
+                raise ValueError("value '%s' is unexpectedly not an instance %s%s" % (str(value), " or ".join([str(i) for i in instance_s]), _suffix_noneable(noneable)))
         else:
-            if not isinstance(value, instance_s) and (not noneable or value is not None):
-                suffix = " or None" if noneable else ""
-                raise ValueError("value '%s' is unexpectedly not an instance %s%s" % (str(value), instance_s, suffix))
+            if not isinstance(value, instance_s) and _violates_noneable(value, noneable):
+                raise ValueError("value '%s' is unexpectedly not an instance %s%s" % (str(value), instance_s, _suffix_noneable(noneable)))
 
     return value
 
 
 def check_list(value, noneable=False):
     if check_on:
-        if not isinstance(value, list) and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly not a list" % str(value))
+        if not isinstance(value, list) and _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexpectedly not a list%s" % (str(value), _suffix_noneable(noneable)))
 
     return value
 
 
 def check_set(value, noneable=False):
     if check_on:
-        if not isinstance(value, set) and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly not a set" % str(value))
+        if not isinstance(value, set) and _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexpectedly not a set%s" % (str(value), _suffix_noneable(noneable)))
 
     return value
 
 
 def check_list_or_set(value, noneable=False):
     if check_on:
-        if not isinstance(value, list) and not isinstance(value, set) and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly not a list or a set" % str(value))
+        if not isinstance(value, list) and not isinstance(value, set) and _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexpectedly not a list or a set%s" % (str(value), _suffix_noneable(noneable)))
 
     return value
 
 
 def check_dict(value, noneable=False):
     if check_on:
-        if not isinstance(value, dict) and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly not a dict" % str(value))
+        if not isinstance(value, dict) and _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexpectedly not a dict%s" % (str(value), _suffix_noneable(noneable)))
 
     return value
 
 
 def check_iterable(value, noneable=False):
     if check_on:
-        if not _is_iterable(value) and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly not iterable" % str(value))
+        if not _is_iterable(value) and _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexpectedly not iterable%s" % (str(value), _suffix_noneable(noneable)))
 
     return value
 
 
 def check_iterable_of_instances(value, instance_s, noneable=False):
     if check_on:
-        if not noneable or value is not None:
+        if value is not None:
             for v in check_iterable(value):
                 if _is_iterable(instance_s):
                     if not any([isinstance(v, i) for i in instance_s]):
@@ -121,6 +119,8 @@ def check_iterable_of_instances(value, instance_s, noneable=False):
                 else:
                     if not isinstance(v, instance_s):
                         raise ValueError("item '%s' inside iterable is unexpectedly not an instance %s" % (str(v), instance_s))
+        elif _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexepectedly none" % (str(value)))
 
     return value
 
@@ -154,6 +154,14 @@ def check_condition(condition, failure_description):
     return condition_result
 
 
+def check_function(value, noneable=False):
+    if check_on:
+        if not callable(value) and _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexpectedly not a function%s" % (str(value), _suffix_noneable(noneable)))
+
+    return value
+
+
 def check_lte(value, target):
     if check_on:
         if value > target:
@@ -172,8 +180,8 @@ def check_gte(value, target):
 
 def check_range(value, lower, upper, noneable=False):
     if check_on:
-        if (value < lower or value > upper) and (not noneable or value is not None):
-            raise ValueError("value '%s' is unexpectedly not in range [%s, %s]" % (str(value), str(lower), str(upper)))
+        if (value < lower or value > upper) and _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexpectedly not in range [%s, %s]%s" % (str(value), str(lower), str(upper), _suffix_noneable(noneable)))
 
     return value
 
@@ -212,9 +220,8 @@ def check_length(value, expected):
 
 def check_one_of(value, options, noneable=False):
     if check_on:
-        if value not in options and (not noneable or value is not None):
-            suffix = " or None" if noneable else ""
-            raise ValueError("value '%s' is unexpectedly not one of '%s'%s" % (str(value), str(options), suffix))
+        if value not in options and _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexpectedly not one of '%s'%s" % (str(value), str(options), _suffix_noneable(noneable)))
 
     return value
 
@@ -253,4 +260,12 @@ def _is_iterable(thing):
         return True
     except TypeError:
         return False
+
+
+def _violates_noneable(value, noneable):
+    return not noneable or value is not None
+
+
+def _suffix_noneable(noneable):
+    return " or None" if noneable else ""
 
