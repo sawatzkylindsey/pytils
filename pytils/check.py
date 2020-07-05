@@ -210,10 +210,14 @@ def check_probability(value):
     return value
 
 
-def check_length(value, expected):
+def check_length(value, expected, noneable=False):
     if check_on:
-        if len(value) != expected:
-            raise ValueError("value '%s' ('%d') is unexpectedly not of length '%d'" % (str(value), len(value), expected))
+        if value is not None:
+            if len(value) != expected:
+                raise ValueError("value '%s' ('%d') is unexpectedly not of length '%d'%s" % (str(value), len(value), expected, _suffix_noneable(noneable)))
+        elif _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexepectedly none" % (str(value)))
+
 
     return value
 
