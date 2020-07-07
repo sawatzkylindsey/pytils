@@ -81,7 +81,7 @@ def rindex(sequence, value):
     return None
 
 
-class Closeable:
+class Closing:
     def __init__(self, handle_fn, close_fn):
         self.handle_fn = check.check_function(handle_fn)
         self.close_fn = check.check_function(close_fn)
@@ -93,7 +93,21 @@ class Closeable:
         self.close_fn()
 
 
-class Closing(Closeable):
+class AutoClosing(Closing):
     def __init__(self, item):
         super().__init__(lambda: item, lambda: item.close())
+
+
+class Closeable:
+    def __init__(self):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception, traceback):
+        self.close()
+
+    def close(self):
+        raise NotImplementedError()
 
