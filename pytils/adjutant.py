@@ -1,7 +1,9 @@
 
+import logging
 import numbers
+import traceback
 
-from pytils import check
+from pytils import check, log
 
 
 def dict_as_str(d, sort_by_key=True, reverse=False, digits=4):
@@ -89,7 +91,7 @@ class Closing:
     def __enter__(self):
         return self.handle_fn()
 
-    def __exit__(self, exception_type, exception, traceback):
+    def __exit__(self, error_type, error, error_traceback):
         self.close_fn()
 
 
@@ -105,9 +107,36 @@ class Closeable:
     def __enter__(self):
         return self
 
-    def __exit__(self, exception_type, exception, traceback):
+    def __exit__(self, error_type, error, error_traceback):
         self.close()
 
     def close(self):
         raise NotImplementedError()
+
+
+class Trial:
+    def __init__(self, trial, logger):
+        self.trial = check.check_one_of(trial, [True, False])
+        self.logger = check.check_instance(logger, logging.Logger)
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, error_type, error, error_traceback):
+        if error is not None:
+            if self.trial:
+                error_message = repr(error)
+                traceback_message = "".join(traceback.format_exception(error_type, error, error_traceback, chain=False)).strip()
+                header = "Trial is ignoring: %s.%s" % (error_type.__module__, error_type.__name__)
+                padding = "-" * len(header)
+                self.logger.warning("%s\n%s\n%s\n%s" % (padding, header, traceback_message, padding))
+                # Ignore the exception.
+                return True
+            else:
+                # Re-raise the exception.
+                return False
+
+
+def trial_scope(trial, logger=log.user_log):
+    return Trial(trial, logger)
 
