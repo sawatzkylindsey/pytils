@@ -248,14 +248,14 @@ def check_exclusive(values):
     matched = [k for k, v in values.items() if v is not None]
 
     if check_on:
-        if len(matched) == 0:
-            raise ValueError("values '%s' are unexpectedly not exclusive - none of '%s' were provided" %
-                (", ".join([k for k in values.keys()]), ", ".join([k for k in values.keys()])))
-        elif len(matched) > 1:
+        if len(matched) > 1:
             raise ValueError("values '%s' are unexpectedly not exclusive - all of '%s' were provided" %
                 (", ".join([k for k in values.keys()]), ", ".join(matched)))
 
-    return matched[0]
+    if len(matched) == 0:
+        return None
+    else:
+        return matched[0]
 
 
 def _is_iterable(thing):
