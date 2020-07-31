@@ -1,5 +1,6 @@
+
 from pytils.invigilator import create_suite
-from pytils.tests import adjutant, base, check, table
+from tests import adjutant, base, check, stream, table
 
 
 def all():
@@ -11,5 +12,6 @@ def unit():
         adjutant.tests(),
         base.tests(),
         check.tests(),
+        stream.tests(),
         table.tests(),
     ]
