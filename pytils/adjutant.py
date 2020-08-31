@@ -45,7 +45,7 @@ def dict_as_str(d, sort_by_key=True, reverse=False, digits=4):
 
 
 def str_as_bool(value):
-    v = value.lower().trim()
+    v = value.lower().strip()
 
     if v in ["yes", "true", "t", "1"]:
         return True
