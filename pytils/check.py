@@ -162,18 +162,18 @@ def check_function(value, noneable=False):
     return value
 
 
-def check_lte(value, target):
+def check_lte(value, target, noneable=False):
     if check_on:
-        if value > target:
-            raise ValueError("value '%s' is unexpectedly not less than or equal to '%s'" % (str(value), str(target)))
+        if (value > target) and _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexpectedly not less than or equal to '%s'%s" % (str(value), str(target), _suffix_noneable(noneable)))
 
     return value
 
 
-def check_gte(value, target):
+def check_gte(value, target, noneable=False):
     if check_on:
-        if value < target:
-            raise ValueError("value '%s' is unexpectedly not greater than or equal to '%s'" % (str(value), str(target)))
+        if (value < target) and _violates_noneable(value, noneable):
+            raise ValueError("value '%s' is unexpectedly not greater than or equal to '%s'%s" % (str(value), str(target), _suffix_noneable(noneable)))
 
     return value
 
