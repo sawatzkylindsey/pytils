@@ -22,8 +22,9 @@ def main(argv):
 def pretty_simplify(source, indent):
     try:
         generator = io.stdin_generator() if source is None else io.file_generator(source)
+        data = pytils.override.extended_loads("".join(generator))
         pytils.override.patch_json_encode()
-        print(json.dumps(json.loads("".join(generator)), indent=indent, separators=(", ", ": ")))
+        print(json.dumps(data, indent=indent, separators=(", ", ": ")))
     finally:
         pytils.override.unpatch_json_encode()
 
